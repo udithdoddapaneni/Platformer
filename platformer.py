@@ -18,7 +18,6 @@ class Player(pg.sprite.Sprite):
         self.x_vel = 0
         self.y_vel = 0
         self.direction = "left"
-        self.mask = None
 
         self.path = os.path.join("assets","protag.png")
         self.image = pg.image.load(self.path)
@@ -26,7 +25,6 @@ class Player(pg.sprite.Sprite):
         self.image = pg.transform.scale(self.image, (32, 32))
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
-
         self.mask = pg.mask.from_surface(self.image)
         
     def move_player(self, x, y):
@@ -67,7 +65,7 @@ class Player(pg.sprite.Sprite):
         self.jump = True
 
     def head_collide(self):
-        self.y_vel *= -1
+        self.y_vel = -self.gravity
 
 class Block(pg.sprite.Sprite):
     def __init__(self, x, y, name):
@@ -105,6 +103,7 @@ def collidey(player, objs):
                 player.landed()
             if player.y_vel < 0:
                 player.rect.top = obj.rect.bottom
+                player.head_collide()
         
 def keybinds(player, objs):
     keys = pg.key.get_pressed()
@@ -131,7 +130,7 @@ def main(window):
     clock = pg.time.Clock()
     player = Player(100, 100)
     block_dimension = 48
-    layer0 = [Block(500, HEIGHT-2*block_dimension, "grass")]+[Block(300, HEIGHT-3*block_dimension, "grass")] + [Block(i*block_dimension, HEIGHT-block_dimension, "grass") for i in range(-1,WIDTH//block_dimension +1)]
+    layer0 = [Block(500, HEIGHT-2*block_dimension, "grass")]+[Block(300, HEIGHT-4*block_dimension, "grass")] + [Block(i*block_dimension, HEIGHT-block_dimension, "grass") for i in range(-1,WIDTH//block_dimension +1)]
     while run:
         clock.tick(FPS)
         for event in pg.event.get():
