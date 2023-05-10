@@ -9,7 +9,7 @@ BG_COLOR = (135, 206, 235)
 window = pg.display.set_mode((WIDTH, HEIGHT))
 
 class Player(pg.sprite.Sprite):
-    gravity = 0.01
+    gravity = 1
     fall_count=0
     jump = False
 
@@ -29,13 +29,13 @@ class Player(pg.sprite.Sprite):
 
         self.mask = pg.mask.from_surface(self.image)
         
-    def move_player(self):
-        self.rect.x += self.x_vel
-        self.rect.y += self.y_vel
+    def move_player(self, x, y):
+        self.rect.x += x
+        self.rect.y += y
 
     def jump_player(self):
         if self.jump:
-            self.y_vel = -4.5
+            self.y_vel = -16
             self.jump = False
 
     def move_left(self):
@@ -58,13 +58,16 @@ class Player(pg.sprite.Sprite):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
     def loop(self,fps):
-        self.y_vel += min(1,self.gravity * (self.fall_count % fps))
+        self.y_vel += min(1, (self.fall_count))*self.gravity
         self.fall_count += 1
 
     def landed(self):
         self.y_vel = 0
         self.fall_count = 0
         self.jump = True
+
+    def head_collide(self):
+        self.y_vel *= -1
 
 class Block(pg.sprite.Sprite):
     def __init__(self, x, y, name):
@@ -84,6 +87,16 @@ class Block(pg.sprite.Sprite):
     def draw(self,window):
         window.blit(self.image, (self.x, self.y))
 
+def collidex(player, objs, vel):
+    player.move_player(vel, 0)
+    for obj in objs:
+        if pg.sprite.collide_mask(player, obj):
+            player.move_player(-vel, 0)
+            return True
+    
+    player.move_player(-vel, 0)
+    return False
+
 def collidey(player, objs):
     for obj in objs:
         if pg.sprite.collide_mask(player, obj):
@@ -95,14 +108,15 @@ def collidey(player, objs):
         
 def keybinds(player, objs):
     keys = pg.key.get_pressed()
-
+    collide_right = collidex(player, objs, player_vel)
+    collide_left = collidex(player, objs, -player_vel)
     player.x_vel = 0
-    if keys[pg.K_LEFT]:
+    if keys[pg.K_LEFT] and not collide_left:
         player.move_left()
     
-    if keys[pg.K_RIGHT]:
+    if keys[pg.K_RIGHT] and not collide_right:
         player.move_right()
-    player.move_player()
+    player.move_player(player.x_vel, player.y_vel)
     collidey(player,objs)
     
 def draw(window,player,layer):
@@ -117,7 +131,7 @@ def main(window):
     clock = pg.time.Clock()
     player = Player(100, 100)
     block_dimension = 48
-    layer0 = [Block(i*block_dimension, HEIGHT-block_dimension, "grass") for i in range(-1,WIDTH//block_dimension +1)]
+    layer0 = [Block(500, HEIGHT-2*block_dimension, "grass")]+[Block(300, HEIGHT-3*block_dimension, "grass")] + [Block(i*block_dimension, HEIGHT-block_dimension, "grass") for i in range(-1,WIDTH//block_dimension +1)]
     while run:
         clock.tick(FPS)
         for event in pg.event.get():
