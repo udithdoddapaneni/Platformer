@@ -2,11 +2,14 @@ import pygame as pg
 import os
 import math
 
+from pygame.sprite import AbstractGroup
+
 player_vel = 3
 FPS = 60
 WIDTH, HEIGHT = 1000, 700
 BG_COLOR = (135, 206, 235)
 window = pg.display.set_mode((WIDTH, HEIGHT))
+mainloop = 0
 
 class Player(pg.sprite.Sprite):
     gravity = 1
@@ -21,7 +24,6 @@ class Player(pg.sprite.Sprite):
 
         self.path = os.path.join("assets","protag.png")
         self.image = pg.image.load(self.path)
-        #self.image.convert_alpha()
         self.image = pg.transform.scale(self.image, (32, 32))
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect(topleft = (x, y))
@@ -85,6 +87,37 @@ class Block(pg.sprite.Sprite):
     def draw(self,window):
         window.blit(self.image, (self.x, self.y))
 
+class Fireblock(Block):
+    def __init__(self, x, y, name):
+        super().__init__(x, y, name)
+    
+    def draw(self, window):
+        return super().draw(window)
+    
+class Fireball(pg.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.path = os.path.join("assets", "fireball.png")
+        img = pg.image.load(self.path)
+        self.image = img.convert_alpha()
+        self.image = pg.transform.scale(self.image, (30,30))
+        self.rect = self.image.get_rect(topleft = (x+14, y-25))
+        self.mask = pg.mask.from_surface(self.image)
+
+    def draw(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+    def move(self):
+        self.rect.y -= 1
+
+fireballs = []
+def fire(objs):
+    if mainloop%(3*FPS) == 0:
+        for obj in objs:
+            if type(obj) == Fireblock:
+                f = Fireball(obj.x, obj.y)
+                fireballs.append(f)
+
 def collidex(player, objs, vel):
     player.move_player(vel, 0)
     for obj in objs:
@@ -118,11 +151,13 @@ def keybinds(player, objs):
     player.move_player(player.x_vel, player.y_vel)
     collidey(player,objs)
     
-def draw(window,player,layers):
+def draw(window,player,layers,fireballs):
     window.fill(BG_COLOR)
     player.draw(window)
     for obj in layers:
         obj.draw(window)
+    for fireball in fireballs:
+        fireball.draw(window)
     pg.display.update()
 
 def get_layers(level):
@@ -136,6 +171,8 @@ def get_layers(level):
                 layers.append(Block(column*block_dimension, row*block_dimension, "grass"))
             elif level[row][column] == 2:
                 layers.append(Block(column*block_dimension, row*block_dimension, "soil"))
+            elif level[row][column] == 3:
+                layers.append(Fireblock(column*block_dimension, row*block_dimension, "fireblock"))
     return layers
 
 # row length = 1000/50 = 20
@@ -153,8 +190,8 @@ level1 = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0],
     [1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1],
 
 ]
@@ -162,6 +199,8 @@ level1 = [
          
 
 def main(window):
+    global mainloop
+    global fireballs
     run = True
     clock = pg.time.Clock()
     player = Player(100, 100)
@@ -178,7 +217,12 @@ def main(window):
 
         player.loop(FPS)
         keybinds(player, layers)
-        draw(window, player, layers)
+        fire(layers)
+        for f in fireballs:
+            f.move()
+        mainloop += 1
+        draw(window, player, layers, fireballs)
+
     pg.quit()
 
 if __name__ == "__main__":
