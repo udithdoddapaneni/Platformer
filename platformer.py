@@ -73,11 +73,11 @@ class Block(pg.sprite.Sprite):
         self.x = x
         self.y = y
         self.name = name
-        self.width = 48
-        self.height = 48
+        self.width = 50
+        self.height = 50
         self.path = os.path.join("assets", self.name + ".png")
         self.image = pg.image.load(self.path)
-        self.image = pg.transform.scale(self.image, (48, 48))
+        self.image = pg.transform.scale(self.image, (50, 50))
         self.image = self.image.convert_alpha()
         self.rect = self.image.get_rect(topleft = (self.x, self.y))
         self.mask = pg.mask.from_surface(self.image)
@@ -118,19 +118,54 @@ def keybinds(player, objs):
     player.move_player(player.x_vel, player.y_vel)
     collidey(player,objs)
     
-def draw(window,player,layer):
+def draw(window,player,layers):
     window.fill(BG_COLOR)
     player.draw(window)
-    for obj in layer:
+    for obj in layers:
         obj.draw(window)
     pg.display.update()
+
+def get_layers(level):
+    block_dimension = 50
+    layers = []
+    for row in range(14):
+        for column in range(20):
+            if level[row][column] == 0:
+                continue
+            elif level[row][column] == 1:
+                layers.append(Block(column*block_dimension, row*block_dimension, "grass"))
+            elif level[row][column] == 2:
+                layers.append(Block(column*block_dimension, row*block_dimension, "soil"))
+    return layers
+
+# row length = 1000/50 = 20
+# column length = 700/50 = 14
+level1 = [
+    
+    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],
+    [1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1],
+
+]
+
+         
 
 def main(window):
     run = True
     clock = pg.time.Clock()
     player = Player(100, 100)
-    block_dimension = 48
-    layer0 = [Block(500, HEIGHT-2*block_dimension, "grass")]+[Block(300, HEIGHT-4*block_dimension, "grass")] + [Block(i*block_dimension, HEIGHT-block_dimension, "grass") for i in range(-1,WIDTH//block_dimension +1)]
+    layers = get_layers(level1)
     while run:
         clock.tick(FPS)
         for event in pg.event.get():
@@ -142,8 +177,8 @@ def main(window):
                     player.jump_player()
 
         player.loop(FPS)
-        keybinds(player, layer0)
-        draw(window, player, layer0)
+        keybinds(player, layers)
+        draw(window, player, layers)
     pg.quit()
 
 if __name__ == "__main__":
