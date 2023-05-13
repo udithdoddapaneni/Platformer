@@ -52,8 +52,8 @@ class Player(pg.sprite.Sprite):
         self.rect.y += y
 
     def jump_player(self):
-        if self.jump and STAMINABAR.Rect.width >= 25:
-            STAMINABAR.Rect.width -= 200
+        if self.jump and STAMINABAR.Rect.width >= 100:
+            STAMINABAR.Rect.width -= 100
             self.y_vel = -16
             self.jump = False
 
@@ -258,8 +258,6 @@ def main(window):
         mainloop += 1
         if STAMINABAR.Rect.width < 499:
             STAMINABAR.Rect.width += 1
-        elif STAMINABAR.Rect.width >= 499 and STAMINABAR.Rect.width < 500:
-            STAMINABAR.Rect.width = 500
         draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR)
         if HEALTHBAR.Rect.width <= 0:
             break
