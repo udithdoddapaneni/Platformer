@@ -10,6 +10,24 @@ WIDTH, HEIGHT = 1000, 700
 BG_COLOR = (135, 206, 235)
 window = pg.display.set_mode((WIDTH, HEIGHT))
 mainloop = 0
+class Healthbar:
+    def __init__(self):
+        self.health = 500
+        self.Rect = pg.Rect(250, 0, 500, 20)
+        
+    def draw(self,window):
+        pg.draw.rect(window, (255, 0, 0), self.Rect)
+
+class Staminabar:
+    def __init__(self):
+        self.stamina = 500
+        self.Rect = pg.Rect(250, 20, 500, 20)
+        
+    def draw(self,window):
+        pg.draw.rect(window, (0, 255, 0), self.Rect)
+
+HEALTHBAR = Healthbar()
+STAMINABAR = Staminabar()
 
 class Player(pg.sprite.Sprite):
     gravity = 1
@@ -34,7 +52,8 @@ class Player(pg.sprite.Sprite):
         self.rect.y += y
 
     def jump_player(self):
-        if self.jump:
+        if self.jump and STAMINABAR.Rect.width >= 25:
+            STAMINABAR.Rect.width -= 200
             self.y_vel = -16
             self.jump = False
 
@@ -118,6 +137,16 @@ def fire(objs):
                 f = Fireball(obj.x, obj.y)
                 fireballs.append(f)
 
+def trap_collision(player, fireballs, objs, HEALTHBAR):
+    for fireball in fireballs:
+        for obj in objs:
+            if pg.sprite.collide_mask(obj, fireball):
+                fireballs.remove(fireball)
+        if pg.sprite.collide_mask(player, fireball):
+            HEALTHBAR.Rect.width -= 100
+            fireballs.remove(fireball)
+                
+
 def collidex(player, objs, vel):
     player.move_player(vel, 0)
     for obj in objs:
@@ -151,13 +180,15 @@ def keybinds(player, objs):
     player.move_player(player.x_vel, player.y_vel)
     collidey(player,objs)
     
-def draw(window,player,layers,fireballs):
+def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
     window.fill(BG_COLOR)
     player.draw(window)
     for obj in layers:
         obj.draw(window)
     for fireball in fireballs:
         fireball.draw(window)
+    HEALTHBAR.draw(window)
+    STAMINABAR.draw(window)
     pg.display.update()
 
 def get_layers(level):
@@ -191,7 +222,7 @@ level1 = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,1,3,0,0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0,0,1,3,0,3,0,0,0,0,0,0,0],
     [1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1],
 
 ]
@@ -201,6 +232,9 @@ level1 = [
 def main(window):
     global mainloop
     global fireballs
+    global HEALTHBAR
+    global STAMINABAR
+
     run = True
     clock = pg.time.Clock()
     player = Player(100, 100)
@@ -220,8 +254,15 @@ def main(window):
         fire(layers)
         for f in fireballs:
             f.move()
+        trap_collision(player, fireballs, layers, HEALTHBAR)
         mainloop += 1
-        draw(window, player, layers, fireballs)
+        if STAMINABAR.Rect.width < 499:
+            STAMINABAR.Rect.width += 1
+        elif STAMINABAR.Rect.width >= 499 and STAMINABAR.Rect.width < 500:
+            STAMINABAR.Rect.width = 500
+        draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR)
+        if HEALTHBAR.Rect.width <= 0:
+            break
 
     pg.quit()
 
