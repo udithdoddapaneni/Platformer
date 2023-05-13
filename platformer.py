@@ -92,37 +92,40 @@ class Enemy(pg.sprite.Sprite):
             self.image_direction = "right"
             self.x_vel = enemy_vel
 
-    def vision_ai(self, objs, player):
+    def vision_ai(self, level, player):
+        objs = None
+        for layer in level:
+            if self in layer:
+                objs = layer
+                break
         if self.direction == "right" and self.attack_clock == 0:
-            for pixel in range(self.rect.x, WIDTH + 100):
-                pixelinvision = True
-                for obj in objs:
-                    if self.rect.y == obj.rect.y and pixel == obj.rect.x and obj != self:
-                        pixelinvision = False
-                        break
-                if pixelinvision:
-                    #print(self.rect.y, player.rect.y)
-                    if player.rect.y-18 <= self.rect.y <= player.rect.y+18 and pixel == player.rect.x:
-                        self.enemy_fire()
-                        self.attack_clock = 2*FPS
-                        break
+            for obj in objs:
+                if player.rect.y-18 <= self.rect.y <= player.rect.y+18:
+                    if self.rect.x <= player.rect.x:
+                        firing = True
+                        for obj in objs:
+                            if self.rect.x <= obj.rect.x <= player.rect.x and type(obj) != Enemy:
+                                firing = False
+                                break
+                        if firing:
+                            self.enemy_fire()
+                            self.attack_clock = 2*FPS
+                            break
 
         elif self.direction == "left" and self.attack_clock == 0:
-            for pixel in range(self.rect.x, -2, -1):
-                pixelinvision = True
-                #print(self.direction)
-                #print(player.rect.y)
-                for obj in objs:
-                    if self.rect.y == obj.rect.y and pixel == obj.rect.x and obj != self:
-                        pixelinvision = False
-                        break
-                if pixelinvision:
-                    if player.rect.y-18 <= self.rect.y <= player.rect.y+18 and pixel == player.rect.x:
-                        #print('jj')
-                        self.enemy_fire()
-                        self.attack_clock = 2*FPS
-                        break
-                    
+            for obj in objs:
+                if player.rect.y-18 <= self.rect.y <= player.rect.y+18:
+                    if player.rect.x <= self.rect.x:
+                        firing = True
+                        for obj in objs:
+                            if player.rect.x <= obj.rect.x <= self.rect.x and type(obj) != Enemy:
+                                firing = False
+                                break
+                        if firing:
+                            self.enemy_fire()
+                            self.attack_clock = 2*FPS
+                            break
+ 
         else:
             self.attack_clock -= 1
 
@@ -276,8 +279,11 @@ def collidex(player, objs, vel):
     player.move_player(vel, 0)
     for obj in objs:
         if pg.sprite.collide_mask(player, obj):
-            player.move_player(-vel, 0)
-            return True
+            if type(obj) == Enemy:
+                HEALTHBAR.Rect.width = 0
+            else:
+                player.move_player(-vel, 0)
+                return True
     
     player.move_player(-vel, 0)
     return False
@@ -285,12 +291,15 @@ def collidex(player, objs, vel):
 def collidey(player, objs):
     for obj in objs:
         if pg.sprite.collide_mask(player, obj):
-            if player.y_vel > 0:
-                player.rect.bottom = obj.rect.top
-                player.landed()
-            if player.y_vel < 0:
-                player.rect.top = obj.rect.bottom
-                player.head_collide()
+            if type(obj) == Enemy:
+                HEALTHBAR.Rect.width = 0
+            else:
+                if player.y_vel > 0:
+                    player.rect.bottom = obj.rect.top
+                    player.landed()
+                if player.y_vel < 0:
+                    player.rect.top = obj.rect.bottom
+                    player.head_collide()
         
 def keybinds(player, objs):
     keys = pg.key.get_pressed()
@@ -316,29 +325,39 @@ def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
     STAMINABAR.draw(window)
     pg.display.update()
 
-def get_layers(level):
+def obj_mapper(level):
+    new_lvl = []
     block_dimension = 50
-    layers = []
     for row in range(14):
+        new_row = []
         for column in range(20):
             if level[row][column] == 0:
                 continue
             elif level[row][column] == 1:
-                layers.append(Block(column*block_dimension, row*block_dimension, "grass"))
+                new_row.append(Block(column*block_dimension, row*block_dimension, "grass"))
             elif level[row][column] == 2:
-                layers.append(Block(column*block_dimension, row*block_dimension, "soil"))
+                new_row.append(Block(column*block_dimension, row*block_dimension, "soil"))
             elif level[row][column] == 3:
-                layers.append(Fireblock(column*block_dimension, row*block_dimension, "fireblock"))
+                new_row.append(Fireblock(column*block_dimension, row*block_dimension, "fireblock"))
             elif level[row][column] == 4:
-                layers.append(Enemy(column*block_dimension, row*block_dimension, "left"))
+                new_row.append(Enemy(column*block_dimension, row*block_dimension, "left"))
             elif level[row][column] == 5:
-                layers.append(Enemy(column*block_dimension, row*block_dimension, "right"))
+                new_row.append(Enemy(column*block_dimension, row*block_dimension, "right"))
+        new_lvl.append(new_row)
+    return new_lvl
+
+def get_layers(level):
+    block_dimension = 50
+    layers = []
+    for row in level:
+        for obj in row:
+            layers.append(obj)
     return layers
 
-def enemy_methods(objs, player):
+def enemy_methods(objs, player, level):
     for obj in objs:
         if type(obj) == Enemy:
-            obj.vision_ai(objs, player)
+            obj.vision_ai(level, player)
             obj.move_ai(objs)
             if obj.direction == "left":
                 obj.move_left()
@@ -362,7 +381,7 @@ level1 = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,1],
+    [1,0,1,0,0,0,0,0,0,4,0,4,0,0,0,0,0,1,0,1],
     [1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1],
 
 ]
@@ -374,11 +393,13 @@ def main(window):
     global fireballs
     global HEALTHBAR
     global STAMINABAR
+    global level1
 
     run = True
     clock = pg.time.Clock()
     player = Player(100, 100)
-    layers = get_layers(level1)
+    level_map = obj_mapper(level1)
+    layers = get_layers(level_map)
     while run:
         clock.tick(FPS)
         for event in pg.event.get():
@@ -395,7 +416,8 @@ def main(window):
         for f in fireballs:
             f.move()
         trap_collision(player, fireballs, layers, HEALTHBAR)
-        enemy_methods(layers, player)
+        enemy_methods(layers, player, level_map)
+        #print(len(fireballs))
         mainloop += 1
         if STAMINABAR.Rect.width < 499:
             STAMINABAR.Rect.width += 1
