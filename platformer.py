@@ -5,11 +5,15 @@ import math
 from pygame.sprite import AbstractGroup
 
 player_vel = 3
+enemy_vel = 1
 FPS = 60
 WIDTH, HEIGHT = 1000, 700
 BG_COLOR = (135, 206, 235)
 window = pg.display.set_mode((WIDTH, HEIGHT))
 mainloop = 0
+
+fireballs = []
+
 class Healthbar:
     def __init__(self):
         self.health = 500
@@ -29,6 +33,127 @@ class Staminabar:
 HEALTHBAR = Healthbar()
 STAMINABAR = Staminabar()
 
+class Enemy_Fireball(pg.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        super().__init__()
+        self.path = os.path.join("assets", "fireball.png")
+        img = pg.image.load(self.path)
+        self.image = img.convert_alpha()
+        self.image = pg.transform.scale(self.image, (30,30))
+        self.rect = self.image.get_rect(topleft = (x, y))
+        self.mask = pg.mask.from_surface(self.image)
+        self.direction = direction
+
+    def draw(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+    def move(self):
+        if self.direction == "right":
+            self.rect.x += 3
+        elif self.direction == "left":
+            self.rect.x -= 3
+
+class Enemy(pg.sprite.Sprite):
+    #enemy_fireballs = []
+    attack_clock = 0
+    movement = True
+    def __init__(self, x, y, direction):
+        super().__init__()
+        self.x_vel = 0
+        self.y_vel = 0
+        self.direction = direction
+        self.path = os.path.join("assets","enemy.png")
+        self.image = pg.image.load(self.path)
+        self.image = pg.transform.scale(self.image, (32, 32))
+        self.image = self.image.convert_alpha()
+        self.image.set_colorkey((255,255,255))
+        self.rect = self.image.get_rect(topleft = (x, y))
+        self.mask = pg.mask.from_surface(self.image)
+        self.image_direction = "left"
+        self.health = 100
+        if self.health <= 0:
+            del self
+
+    def move_left(self):
+        if self.direction == "left" and self.image_direction == "left":
+            self.x_vel = -enemy_vel
+        else:
+            self.image = pg.transform.flip(self.image, True, False)
+            self.image.set_colorkey((255,255,255))
+            self.image_direction = "left"
+            self.x_vel = -enemy_vel
+
+    def move_right(self):
+        if self.direction == "right" and self.image_direction == "right":
+            self.x_vel = enemy_vel
+        else:
+            self.image = pg.transform.flip(self.image, True, False)
+            self.image.set_colorkey((255,255,255))
+            self.image_direction = "right"
+            self.x_vel = enemy_vel
+
+    def vision_ai(self, objs, player):
+        if self.direction == "right" and self.attack_clock == 0:
+            for pixel in range(self.rect.x, WIDTH + 100):
+                pixelinvision = True
+                for obj in objs:
+                    if self.rect.y == obj.rect.y and pixel == obj.rect.x and obj != self:
+                        pixelinvision = False
+                        break
+                if pixelinvision:
+                    #print(self.rect.y, player.rect.y)
+                    if player.rect.y-18 <= self.rect.y <= player.rect.y+18 and pixel == player.rect.x:
+                        self.enemy_fire()
+                        self.attack_clock = 2*FPS
+                        break
+
+        elif self.direction == "left" and self.attack_clock == 0:
+            for pixel in range(self.rect.x, -2, -1):
+                pixelinvision = True
+                #print(self.direction)
+                #print(player.rect.y)
+                for obj in objs:
+                    if self.rect.y == obj.rect.y and pixel == obj.rect.x and obj != self:
+                        pixelinvision = False
+                        break
+                if pixelinvision:
+                    if player.rect.y-18 <= self.rect.y <= player.rect.y+18 and pixel == player.rect.x:
+                        #print('jj')
+                        self.enemy_fire()
+                        self.attack_clock = 2*FPS
+                        break
+                    
+        else:
+            self.attack_clock -= 1
+
+    def reverse_direction(self):
+        if self.direction == "right":
+            self.direction = "left"
+        elif self.direction == "left":
+            self.direction = "right"
+
+    def move_enemy(self, vel):
+        if self.movement:
+            self.rect.x += vel
+
+    def move_ai(self, objs):
+        self.move_enemy(self.x_vel)
+        for obj in objs:
+            if pg.sprite.collide_mask(self, obj) and obj != self:
+                self.move_enemy(-self.x_vel)
+                self.reverse_direction()
+                return None
+        
+        self.move_enemy(-self.x_vel)
+        return None
+        
+    def enemy_fire(self):
+        f = Enemy_Fireball(self.rect.x, self.rect.y, self.direction)
+        fireballs.append(f)
+        
+    def draw(self,window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+    
 class Player(pg.sprite.Sprite):
     gravity = 1
     fall_count=0
@@ -129,7 +254,7 @@ class Fireball(pg.sprite.Sprite):
     def move(self):
         self.rect.y -= 1
 
-fireballs = []
+
 def fire(objs):
     if mainloop%(3*FPS) == 0:
         for obj in objs:
@@ -140,7 +265,7 @@ def fire(objs):
 def trap_collision(player, fireballs, objs, HEALTHBAR):
     for fireball in fireballs:
         for obj in objs:
-            if pg.sprite.collide_mask(obj, fireball):
+            if pg.sprite.collide_mask(obj, fireball) and type(obj) != Enemy:
                 fireballs.remove(fireball)
         if pg.sprite.collide_mask(player, fireball):
             HEALTHBAR.Rect.width -= 100
@@ -204,7 +329,22 @@ def get_layers(level):
                 layers.append(Block(column*block_dimension, row*block_dimension, "soil"))
             elif level[row][column] == 3:
                 layers.append(Fireblock(column*block_dimension, row*block_dimension, "fireblock"))
+            elif level[row][column] == 4:
+                layers.append(Enemy(column*block_dimension, row*block_dimension, "left"))
+            elif level[row][column] == 5:
+                layers.append(Enemy(column*block_dimension, row*block_dimension, "right"))
     return layers
+
+def enemy_methods(objs, player):
+    for obj in objs:
+        if type(obj) == Enemy:
+            obj.vision_ai(objs, player)
+            obj.move_ai(objs)
+            if obj.direction == "left":
+                obj.move_left()
+            elif obj.direction == "right":
+                obj.move_right()
+            obj.move_enemy(obj.x_vel)
 
 # row length = 1000/50 = 20
 # column length = 700/50 = 14
@@ -221,8 +361,8 @@ level1 = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,1,3,0,3,0,0,0,0,0,0,0],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,1],
     [1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1],
 
 ]
@@ -255,6 +395,7 @@ def main(window):
         for f in fireballs:
             f.move()
         trap_collision(player, fireballs, layers, HEALTHBAR)
+        enemy_methods(layers, player)
         mainloop += 1
         if STAMINABAR.Rect.width < 499:
             STAMINABAR.Rect.width += 1
