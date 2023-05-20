@@ -1,18 +1,21 @@
 import pygame as pg
 import os
 import math
-
-from pygame.sprite import AbstractGroup
+pg.init()
 
 player_vel = 3
 enemy_vel = 1
+Font = pg.font.Font("freesansbold.ttf", 10)
 FPS = 60
 WIDTH, HEIGHT = 1000, 700
 BG_COLOR = (135, 206, 235)
 window = pg.display.set_mode((WIDTH, HEIGHT))
 mainloop = 0
 
+arrows = []
 fireballs = []
+
+
 
 class Healthbar:
     def __init__(self):
@@ -49,12 +52,11 @@ class Enemy_Fireball(pg.sprite.Sprite):
 
     def move(self):
         if self.direction == "right":
-            self.rect.x += 3
+            self.rect.x += 4
         elif self.direction == "left":
-            self.rect.x -= 3
+            self.rect.x -= 4
 
 class Enemy(pg.sprite.Sprite):
-    #enemy_fireballs = []
     attack_clock = 0
     movement = True
     def __init__(self, x, y, direction):
@@ -67,12 +69,10 @@ class Enemy(pg.sprite.Sprite):
         self.image = pg.transform.scale(self.image, (32, 32))
         self.image = self.image.convert_alpha()
         self.image.set_colorkey((255,255,255))
-        self.rect = self.image.get_rect(topleft = (x, y))
+        self.rect = self.image.get_rect(topleft = (x, y+15))
         self.mask = pg.mask.from_surface(self.image)
         self.image_direction = "left"
         self.health = 100
-        if self.health <= 0:
-            del self
 
     def move_left(self):
         if self.direction == "left" and self.image_direction == "left":
@@ -142,7 +142,7 @@ class Enemy(pg.sprite.Sprite):
     def move_ai(self, objs):
         self.move_enemy(self.x_vel)
         for obj in objs:
-            if pg.sprite.collide_mask(self, obj) and obj != self:
+            if pg.sprite.collide_mask(self, obj) and type(obj) != Enemy:
                 self.move_enemy(-self.x_vel)
                 self.reverse_direction()
                 return None
@@ -156,11 +156,63 @@ class Enemy(pg.sprite.Sprite):
         
     def draw(self,window):
         window.blit(self.image, (self.rect.x, self.rect.y))
+
+class Arrow(pg.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        super().__init__()
+        self.direction = direction
+        self.path = os.path.join("assets", "arrow.png")
+        img = pg.image.load(self.path)
+        self.image = img.convert_alpha()
+        self.image = pg.transform.scale(self.image, (30, 30))
+        if self.direction == "right":
+            self.image.set_colorkey((255, 255, 255))
+            self.rect = self.image.get_rect(topleft = (x, y))
+            self.mask = pg.mask.from_surface(self.image)
+        else:
+            self.image = pg.transform.flip(self.image, True, False)
+            self.image = self.image.convert_alpha()
+            self.image.set_colorkey((255, 255, 255))
+            self.rect = self.image.get_rect(topleft = (x, y))
+            self.mask = pg.mask.from_surface(self.image)
+
+    def draw(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+    def move(self):
+        if self.direction == "right":
+            self.rect.x += 4
+        elif self.direction == "left":
+            self.rect.x -= 4
+
+    def collision(self, objs):
+        for obj in objs:
+            if pg.sprite.collide_mask(self, obj):
+                if type(obj) == Enemy:
+                    obj.health -= 40
+                    if obj.health <= 0:
+                        objs.remove(obj)
+                arrows.remove(self)
     
 class Player(pg.sprite.Sprite):
     gravity = 1
     fall_count=0
     jump = False
+    Shield = False
+    Shield_cooldown_timer = 0
+    Shield_working_time = 0
+
+    def attack1(self):
+        if STAMINABAR.Rect.width >= 250:
+            arrow = Arrow(self.rect.x, self.rect.y, self.direction)
+            STAMINABAR.Rect.width -= 250
+            arrows.append(arrow)
+    
+    def shield(self):
+        if self.Shield_cooldown_timer == 0 and self.Shield_working_time == 0:
+            self.Shield = True
+            self.Shield_working_time = 5*FPS
+            self.Shield_cooldown_timer = 10*FPS
 
     def __init__(self, x, y):
         super().__init__()
@@ -207,6 +259,12 @@ class Player(pg.sprite.Sprite):
     def loop(self,fps):
         self.y_vel += min(1, (self.fall_count))*self.gravity
         self.fall_count += 1
+        if self.Shield_working_time == 0:
+            self.Shield = False
+        if self.Shield_working_time > 0:
+            self.Shield_working_time -= 1
+        if self.Shield_cooldown_timer > 0 and self.Shield_working_time == 0:
+            self.Shield_cooldown_timer -= 1
 
     def landed(self):
         self.y_vel = 0
@@ -257,7 +315,21 @@ class Fireball(pg.sprite.Sprite):
     def move(self):
         self.rect.y -= 1
 
-
+def text(player, window):
+    cool_time = Font.render("cooldown: "+str(player.Shield_cooldown_timer//FPS),True, (23,15,236), (255,255,255))
+    work_time = Font.render("worktime: "+str(player.Shield_working_time//FPS), True, (45,236,15), (255,255,255))
+    shield = None
+    if player.Shield == True:
+        shield = Font.render("shield: "+"ON", True, (197,173,34), (255,255,255))
+    else:
+        shield = Font.render("shield: "+"OFF", True, (197,173,34), (255,255,255))
+    c = cool_time.get_rect(topleft = (900,10))
+    w = work_time.get_rect(topleft = (900,20))
+    s = work_time.get_rect(topleft = (900,30))
+    window.blit(cool_time, c)
+    window.blit(work_time, w)
+    window.blit(shield, s)
+    
 def fire(objs):
     if mainloop%(3*FPS) == 0:
         for obj in objs:
@@ -271,7 +343,8 @@ def trap_collision(player, fireballs, objs, HEALTHBAR):
             if pg.sprite.collide_mask(obj, fireball) and type(obj) != Enemy:
                 fireballs.remove(fireball)
         if pg.sprite.collide_mask(player, fireball):
-            HEALTHBAR.Rect.width -= 100
+            if player.Shield == False:
+                HEALTHBAR.Rect.width -= 100
             fireballs.remove(fireball)
                 
 
@@ -321,6 +394,9 @@ def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
         obj.draw(window)
     for fireball in fireballs:
         fireball.draw(window)
+    for arrow in arrows:
+        arrow.draw(window)
+    text(player, window)
     HEALTHBAR.draw(window)
     STAMINABAR.draw(window)
     pg.display.update()
@@ -381,8 +457,8 @@ level1 = [
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
     [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,1,0,0,0,0,0,0,4,0,4,0,0,0,0,0,1,0,1],
-    [1,1,1,1,1,1,1,1,1,2,2,1,1,1,1,1,1,1,1,1],
+    [1,0,1,0,0,0,0,0,0,5,0,4,0,0,0,0,0,1,0,1],
+    [1,1,1,1,1,1,3,1,1,2,2,1,1,1,1,1,1,1,1,1],
 
 ]
 
@@ -409,15 +485,21 @@ def main(window):
             if event.type == pg.KEYDOWN:
                 if event.key == pg.K_UP:
                     player.jump_player()
+                if event.key == pg.K_SPACE:
+                    player.attack1()
+                if event.key == pg.K_RSHIFT or event.key == pg.K_LSHIFT:
+                    player.shield()
 
         player.loop(FPS)
         keybinds(player, layers)
         fire(layers)
         for f in fireballs:
             f.move()
+        for arrow in arrows:
+            arrow.move()
+            arrow.collision(layers)
         trap_collision(player, fireballs, layers, HEALTHBAR)
         enemy_methods(layers, player, level_map)
-        #print(len(fireballs))
         mainloop += 1
         if STAMINABAR.Rect.width < 499:
             STAMINABAR.Rect.width += 1
