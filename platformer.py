@@ -1,6 +1,6 @@
 import pygame as pg
 import os
-import math
+import tkinter as tk
 
 from pygame.sprite import AbstractGroup
 pg.init()
@@ -11,7 +11,7 @@ Font = pg.font.Font("freesansbold.ttf", 10)
 FPS = 60
 WIDTH, HEIGHT = 1000, 700
 BG_COLOR = (135, 206, 235)
-window = pg.display.set_mode((WIDTH, HEIGHT))
+#window = pg.display.set_mode((WIDTH, HEIGHT))
 mainloop = 0  
 level_iterator = 0
 arrows = []
@@ -478,6 +478,39 @@ def enemy_methods(objs, player, level):
                 obj.move_right()
             obj.move_enemy(obj.x_vel)
 
+LAUNCH = False
+class MAIN_MENU:
+    def __init__(self):
+        self.main_menu = tk.Tk()
+        self.main_menu.title("Platformer")
+        self.start = tk.Button(self.main_menu, text = "start", width = 30, command = self.launch)
+        self.exit = tk.Button(self.main_menu, text = "quit", width = 30, command = self.main_menu.destroy)
+
+        self.start.grid(row = 1, column = 2)
+        self.exit.grid(row = 2, column = 2)
+
+        tk.mainloop()
+
+    def launch(self):
+        global LAUNCH
+
+        self.main_menu.destroy()
+        LAUNCH = True
+
+def victory():
+    victory = tk.Tk()
+    victory.title("VICTORY !!")
+
+    victory_text = tk.Label(victory, text = "!! YOU WIN :) !!").pack()
+    tk.mainloop()
+        
+def loss():
+    loss = tk.Tk()
+    loss.title("LOSS !!")
+
+    loss_text = tk.Label(loss, text = "!! YOU LOSE :( !!").pack()
+    tk.mainloop()
+
 # row length = 1000/50 = 20
 # column length = 700/50 = 14
 
@@ -524,21 +557,25 @@ level2 = [
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
-    [2,0,1,0,0,0,0,0,0,0,6,0,0,0,0,0,0,1,0,7],
+    [2,0,1,0,0,0,4,0,0,0,6,0,0,0,0,0,0,1,0,7],
     [2,1,1,1,1,1,2,1,1,2,2,1,1,1,1,1,1,1,1,2],
 
 ]
 
 levels = [level1, level2]
 
+menu = MAIN_MENU()
 
-def main(window):
+def main():
     global mainloop
     global fireballs
     global HEALTHBAR
     global STAMINABAR
     global level1
     global level_iterator
+    global menu
+
+    window = pg.display.set_mode((WIDTH, HEIGHT))
     try:
         level = levels[level_iterator]
     except IndexError:
@@ -585,6 +622,7 @@ def main(window):
             try:
                 level = levels[level_iterator]
             except IndexError:
+                victory()
                 break
             level_map = obj_mapper(level)
             layers = get_layers(level_map)
@@ -603,9 +641,11 @@ def main(window):
             STAMINABAR.Rect.width += 1
         draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR)
         if HEALTHBAR.Rect.width <= 0:
+            loss()
             break
 
     pg.quit()
 
 if __name__ == "__main__":
-    main(window)
+    if LAUNCH:
+        main()
