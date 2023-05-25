@@ -1,6 +1,8 @@
 import pygame as pg
 import os
 import math
+
+from pygame.sprite import AbstractGroup
 pg.init()
 
 player_vel = 3
@@ -10,8 +12,8 @@ FPS = 60
 WIDTH, HEIGHT = 1000, 700
 BG_COLOR = (135, 206, 235)
 window = pg.display.set_mode((WIDTH, HEIGHT))
-mainloop = 0
-
+mainloop = 0  
+level_iterator = 0
 arrows = []
 fireballs = []
 
@@ -35,6 +37,37 @@ class Staminabar:
 
 HEALTHBAR = Healthbar()
 STAMINABAR = Staminabar()
+
+class Door(pg.sprite.Sprite):
+    def __init__(self, x, y, name):
+        super().__init__()
+        self.path = os.path.join("assets", name + ".png")
+        img = pg.image.load(self.path)
+        self.image = img.convert_alpha()
+        self.image.set_colorkey((255, 255, 255))
+        self.image = pg.transform.scale(self.image, (70,70))
+        self.image.set_colorkey((255, 255, 255))
+        self.rect = self.image.get_rect(topleft = (x, y))
+        self.mask = pg.mask.from_surface(self.image)
+    def draw(self, window):
+        window.blit(self.image, (self.rect.x, self.rect.y))
+
+class EntranceDoor(Door):
+    def __init__(self, x, y, name = "entrance_door"):
+        super().__init__(x, y, name)
+    def draw(self, window):
+        return super().draw(window)
+
+class ExitDoor(Door):
+    def __init__(self, x, y, name = "exit_door"):
+        super().__init__(x, y, name)
+    def exit(self, player):
+        global level_iterator
+        if pg.sprite.collide_mask(self, player):
+            level_iterator += 1
+            return True
+    def draw(self, window):
+        return super().draw(window)
 
 class Enemy_Fireball(pg.sprite.Sprite):
     def __init__(self, x, y, direction):
@@ -354,7 +387,7 @@ def collidex(player, objs, vel):
         if pg.sprite.collide_mask(player, obj):
             if type(obj) == Enemy:
                 HEALTHBAR.Rect.width = 0
-            else:
+            elif type(obj) != EntranceDoor and type(obj) != ExitDoor:
                 player.move_player(-vel, 0)
                 return True
     
@@ -366,7 +399,7 @@ def collidey(player, objs):
         if pg.sprite.collide_mask(player, obj):
             if type(obj) == Enemy:
                 HEALTHBAR.Rect.width = 0
-            else:
+            elif type(obj) != EntranceDoor and type(obj) != ExitDoor:
                 if player.y_vel > 0:
                     player.rect.bottom = obj.rect.top
                     player.landed()
@@ -419,6 +452,10 @@ def obj_mapper(level):
                 new_row.append(Enemy(column*block_dimension, row*block_dimension, "left"))
             elif level[row][column] == 5:
                 new_row.append(Enemy(column*block_dimension, row*block_dimension, "right"))
+            elif level[row][column] == 6:
+                new_row.append(EntranceDoor(column*block_dimension, row*block_dimension))
+            elif level[row][column] == 7:
+                new_row.append(ExitDoor(column*block_dimension, row*block_dimension))
         new_lvl.append(new_row)
     return new_lvl
 
@@ -443,26 +480,57 @@ def enemy_methods(objs, player, level):
 
 # row length = 1000/50 = 20
 # column length = 700/50 = 14
+
+
+#grass = 1
+#soil = 2
+#fireblock = 3
+#enemy_left = 4
+#enemy_right = 5
+#entrance_door = 6
+#exit_door = 7
+
+
 level1 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
-    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-    [1,0,1,0,0,0,0,0,0,5,0,4,0,0,0,0,0,1,0,1],
-    [1,1,1,1,1,1,3,1,1,2,2,1,1,1,1,1,1,1,1,1],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,6,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,7],
+    [2,1,1,1,1,1,2,1,1,2,2,1,1,1,1,1,1,1,1,2],
 
 ]
 
-         
+level2 = [
+    
+    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,1,0,0,0,0,0,0,0,6,0,0,0,0,0,0,1,0,7],
+    [2,1,1,1,1,1,2,1,1,2,2,1,1,1,1,1,1,1,1,2],
+
+]
+
+levels = [level1, level2]
+
 
 def main(window):
     global mainloop
@@ -470,12 +538,24 @@ def main(window):
     global HEALTHBAR
     global STAMINABAR
     global level1
-
+    global level_iterator
+    try:
+        level = levels[level_iterator]
+    except IndexError:
+        pg.quit()
     run = True
     clock = pg.time.Clock()
-    player = Player(100, 100)
-    level_map = obj_mapper(level1)
+    level_map = obj_mapper(level)
     layers = get_layers(level_map)
+    player = None
+    entrance_door = None
+    exit_door = None
+    for obj in layers:
+        if type(obj) == EntranceDoor:
+            player = Player(obj.rect.x, obj.rect.y)
+            entrance_door = obj
+        elif type(obj) == ExitDoor:
+            exit_door = obj
     while run:
         clock.tick(FPS)
         for event in pg.event.get():
@@ -500,6 +580,24 @@ def main(window):
             arrow.collision(layers)
         trap_collision(player, fireballs, layers, HEALTHBAR)
         enemy_methods(layers, player, level_map)
+        if exit_door.exit(player):
+        ####
+            try:
+                level = levels[level_iterator]
+            except IndexError:
+                break
+            level_map = obj_mapper(level)
+            layers = get_layers(level_map)
+            player = None
+            entrance_door = None
+            exit_door = None
+            for obj in layers:
+                if type(obj) == EntranceDoor:
+                    player = Player(obj.rect.x, obj.rect.y)
+                    entrance_door = obj
+                elif type(obj) == ExitDoor:
+                    exit_door = obj
+        ####
         mainloop += 1
         if STAMINABAR.Rect.width < 499:
             STAMINABAR.Rect.width += 1
