@@ -137,7 +137,7 @@ class Enemy(pg.sprite.Sprite):
                     if self.rect.x <= player.rect.x:
                         firing = True
                         for obj in objs:
-                            if self.rect.x <= obj.rect.x <= player.rect.x and type(obj) != Enemy:
+                            if self.rect.x <= obj.rect.x <= player.rect.x and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
                                 firing = False
                                 break
                         if firing:
@@ -151,7 +151,7 @@ class Enemy(pg.sprite.Sprite):
                     if player.rect.x <= self.rect.x:
                         firing = True
                         for obj in objs:
-                            if player.rect.x <= obj.rect.x <= self.rect.x and type(obj) != Enemy:
+                            if player.rect.x <= obj.rect.x <= self.rect.x and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
                                 firing = False
                                 break
                         if firing:
@@ -175,7 +175,7 @@ class Enemy(pg.sprite.Sprite):
     def move_ai(self, objs):
         self.move_enemy(self.x_vel)
         for obj in objs:
-            if pg.sprite.collide_mask(self, obj) and type(obj) != Enemy:
+            if pg.sprite.collide_mask(self, obj) and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
                 self.move_enemy(-self.x_vel)
                 self.reverse_direction()
                 return None
@@ -220,7 +220,7 @@ class Arrow(pg.sprite.Sprite):
 
     def collision(self, objs):
         for obj in objs:
-            if pg.sprite.collide_mask(self, obj):
+            if pg.sprite.collide_mask(self, obj) and type(obj) != EntranceDoor and type(obj) != ExitDoor:
                 if type(obj) == Enemy:
                     obj.health -= 40
                     if obj.health <= 0:
@@ -237,26 +237,33 @@ class Player(pg.sprite.Sprite):
 
     def attack1(self):
         if STAMINABAR.Rect.width >= 250:
-            arrow = Arrow(self.rect.x, self.rect.y, self.direction)
+            arrow = Arrow(self.rect.x, self.rect.y+5, self.direction)
             STAMINABAR.Rect.width -= 250
             arrows.append(arrow)
     
     def shield(self):
-        if self.Shield_cooldown_timer == 0 and self.Shield_working_time == 0:
+        if self.Shield_cooldown_timer == 0 and self.Shield_working_time == 0 and STAMINABAR.Rect.width >= 450:
+            STAMINABAR.Rect.width -= 450
             self.Shield = True
             self.Shield_working_time = 5*FPS
-            self.Shield_cooldown_timer = 10*FPS
-
+            self.Shield_cooldown_timer = 45*FPS
+            self.path = os.path.join("assets","shielded_protag.png")
+            self.image = pg.image.load(self.path)
+            self.image = self.image.convert_alpha()
+            if self.direction == "left":
+                self.image = pg.transform.flip(self.image, True, False)
+            self.image = pg.transform.scale(self.image, (35, 35))
+            self.rect = self.image.get_rect(topleft = (self.rect.x, self.rect.y))
+            self.mask = pg.mask.from_surface(self.image)
     def __init__(self, x, y):
         super().__init__()
         self.x_vel = 0
         self.y_vel = 0
-        self.direction = "left"
-
+        self.direction = "right"
         self.path = os.path.join("assets","protag.png")
         self.image = pg.image.load(self.path)
-        self.image = pg.transform.scale(self.image, (32, 32))
         self.image = self.image.convert_alpha()
+        self.image = pg.transform.scale(self.image, (35, 35))
         self.rect = self.image.get_rect(topleft = (x, y))
         self.mask = pg.mask.from_surface(self.image)
         
@@ -294,6 +301,14 @@ class Player(pg.sprite.Sprite):
         self.fall_count += 1
         if self.Shield_working_time == 0:
             self.Shield = False
+            self.path = os.path.join("assets","protag.png")
+            self.image = pg.image.load(self.path)
+            self.image = self.image.convert_alpha()
+            if self.direction == "left":
+                self.image = pg.transform.flip(self.image, True, False)
+            self.image = pg.transform.scale(self.image, (35, 35))
+            self.rect = self.image.get_rect(topleft = (self.rect.x, self.rect.y))
+            self.mask = pg.mask.from_surface(self.image)
         if self.Shield_working_time > 0:
             self.Shield_working_time -= 1
         if self.Shield_cooldown_timer > 0 and self.Shield_working_time == 0:
@@ -373,7 +388,7 @@ def fire(objs):
 def trap_collision(player, fireballs, objs, HEALTHBAR):
     for fireball in fireballs:
         for obj in objs:
-            if pg.sprite.collide_mask(obj, fireball) and type(obj) != Enemy:
+            if pg.sprite.collide_mask(obj, fireball) and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
                 fireballs.remove(fireball)
         if pg.sprite.collide_mask(player, fireball):
             if player.Shield == False:
@@ -422,7 +437,6 @@ def keybinds(player, objs):
     
 def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
     window.fill(BG_COLOR)
-    player.draw(window)
     for obj in layers:
         obj.draw(window)
     for fireball in fireballs:
@@ -432,6 +446,8 @@ def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
     text(player, window)
     HEALTHBAR.draw(window)
     STAMINABAR.draw(window)
+    player.draw(window)
+
     pg.display.update()
 
 def obj_mapper(level):
@@ -557,7 +573,7 @@ level2 = [
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
-    [2,0,1,0,0,0,4,0,0,0,6,0,0,0,0,0,0,1,0,7],
+    [2,0,1,0,0,0,4,0,0,0,6,0,0,0,1,0,0,1,0,7],
     [2,1,1,1,1,1,2,1,1,2,2,1,1,1,1,1,1,1,1,2],
 
 ]
