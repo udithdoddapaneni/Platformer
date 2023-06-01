@@ -17,77 +17,86 @@ arrows = []
 fireballs = []
 
 
-
 class Healthbar:
-    #this is the healthbar of the player
-    #doesn't get regenerated
-    #total initial health is 500
+    # this is the healthbar of the player
+    # doesn't get regenerated
+    # total initial health is 500
     def __init__(self):
         self.health = 500
         self.Rect = pg.Rect(250, 0, 500, 20)
         
-    def draw(self,window):
+    def draw(self, window):
         pg.draw.rect(window, (255, 0, 0), self.Rect)
 
+
 class Staminabar:
-    #this is the staminabar of player. when player attacks or jumps or uses shield, stamina gets consumed
-    #gets regenerated
-    #total initial health is 500
+    # this is the staminabar of player. when player attacks or jumps or uses shield, stamina gets consumed
+    # gets regenerated
+    # total initial health is 500
     def __init__(self):
         self.stamina = 500
         self.Rect = pg.Rect(250, 20, 500, 20)
         
-    def draw(self,window):
+    def draw(self, window):
         pg.draw.rect(window, (0, 255, 0), self.Rect)
+
 
 HEALTHBAR = Healthbar()
 STAMINABAR = Staminabar()
 
+
 class Door(pg.sprite.Sprite):
-    #this class is parent class to entrance door and exit door
+    # this class is parent class to entrance door and exit door
     def __init__(self, x, y, name):
         super().__init__()
         self.path = os.path.join("assets", name + ".png")
         img = pg.image.load(self.path)
         self.image = img.convert_alpha()
         self.image.set_colorkey((255, 255, 255))
-        self.image = pg.transform.scale(self.image, (70,70))
+        self.image = pg.transform.scale(self.image, (70, 70))
         self.image.set_colorkey((255, 255, 255))
-        self.rect = self.image.get_rect(topleft = (x, y))
+        self.rect = self.image.get_rect(topleft=(x, y))
         self.mask = pg.mask.from_surface(self.image)
+
     def draw(self, window):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
+
 class EntranceDoor(Door):
-    #the player spawns here. The player can move through this
-    def __init__(self, x, y, name = "entrance_door"):
+    # the player spawns here. The player can move through this
+    def __init__(self, x, y, name="entrance_door"):
         super().__init__(x, y, name)
+
     def draw(self, window):
         return super().draw(window)
 
+
 class ExitDoor(Door):
-    #this is the objective of the level. touching this will move to another level if any
-    def __init__(self, x, y, name = "exit_door"):
+    # this is the objective of the level. touching this will move to another level if any
+    def __init__(self, x, y, name="exit_door"):
         super().__init__(x, y, name)
+
     def exit(self, player):
         global level_iterator
         if pg.sprite.collide_mask(self, player):
             level_iterator += 1
             return True
+
     def draw(self, window):
         return super().draw(window)
 
+
 class Enemy_Fireball(pg.sprite.Sprite):
-    #this is the class of fireball emitted by enemies
-    #unlike other fireball that comes out of traps, this moves horizontally
-    #when player touches it, the health bar is reduced by 100
+    # this is the class of fireball emitted by enemies
+    # unlike other fireball that comes out of traps, this moves horizontally
+    # when player touches it, the health bar is reduced by 100
     def __init__(self, x, y, direction):
         super().__init__()
         self.path = os.path.join("assets", "fireball.png")
         img = pg.image.load(self.path)
         self.image = img.convert_alpha()
-        self.image = pg.transform.scale(self.image, (30,30))
-        self.rect = self.image.get_rect(topleft = (x, y))
+        self.image = pg.transform.scale(self.image, (30, 30))
+        self.rect = self.image.get_rect(topleft=(x, y))
         self.mask = pg.mask.from_surface(self.image)
         self.direction = direction
 
@@ -100,21 +109,23 @@ class Enemy_Fireball(pg.sprite.Sprite):
         elif self.direction == "left":
             self.rect.x -= 4
 
+
 class Enemy(pg.sprite.Sprite):
-    #this is the class of the enemy unit
+    # this is the class of the enemy unit
     attack_clock = 0
     movement = True
+
     def __init__(self, x, y, direction):
         super().__init__()
         self.x_vel = 0
         self.y_vel = 0
         self.direction = direction
-        self.path = os.path.join("assets","enemy.png")
+        self.path = os.path.join("assets", "enemy.png")
         self.image = pg.image.load(self.path)
         self.image = pg.transform.scale(self.image, (32, 32))
         self.image = self.image.convert_alpha()
-        self.image.set_colorkey((255,255,255))
-        self.rect = self.image.get_rect(topleft = (x, y+15))
+        self.image.set_colorkey((255, 255, 255))
+        self.rect = self.image.get_rect(topleft=(x, y+15))
         self.mask = pg.mask.from_surface(self.image)
         self.image_direction = "left"
         self.health = 100
@@ -138,10 +149,10 @@ class Enemy(pg.sprite.Sprite):
             self.x_vel = enemy_vel
 
     def vision_ai(self, level, player):
-        #this defines the line of sight of the enemy
-        #if the player is in the line of sight of the enemy, that is
-        #the player is in the same row as enemy and in the direction of enemy then the enemy unit
-        #fires a fireball towards the player
+        # this defines the line of sight of the enemy
+        # if the player is in the line of sight of the enemy, that is
+        # the player is in the same row as enemy and in the direction of enemy then the enemy unit
+        # fires a fireball towards the player
         objs = None
         for layer in level:
             if self in layer:
@@ -189,8 +200,8 @@ class Enemy(pg.sprite.Sprite):
             self.rect.x += vel
 
     def move_ai(self, objs):
-        #this is for detecting collision with blocks. if the enemy unit collides with a block it will
-        #reverse its direction
+        # this is for detecting collision with blocks. if the enemy unit collides with a block it will
+        # reverse its direction
         self.move_enemy(self.x_vel)
         for obj in objs:
             if pg.sprite.collide_mask(self, obj) and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
@@ -202,18 +213,19 @@ class Enemy(pg.sprite.Sprite):
         return None
         
     def enemy_fire(self):
-        #this is the function that makes enemy fire the firballs
+        # this is the function that makes enemy fire the firballs
         f = Enemy_Fireball(self.rect.x, self.rect.y, self.direction)
         fireballs.append(f)
         
     def draw(self,window):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
+
 class Arrow(pg.sprite.Sprite):
-    #this is the player's weapon
-    #costs 250 stamina, that is half of total stamina
-    #deals 40 damage to enemy unit, need 3 hits to kill one unit
-    #if it collides with a block, it will disappear
+    # this is the player's weapon
+    # costs 250 stamina, that is half of total stamina
+    # deals 40 damage to enemy unit, need 3 hits to kill one unit
+    # if it collides with a block, it will disappear
     def __init__(self, x, y, direction):
         super().__init__()
         self.direction = direction
@@ -223,13 +235,13 @@ class Arrow(pg.sprite.Sprite):
         self.image = pg.transform.scale(self.image, (30, 30))
         if self.direction == "right":
             self.image.set_colorkey((255, 255, 255))
-            self.rect = self.image.get_rect(topleft = (x, y))
+            self.rect = self.image.get_rect(topleft=(x, y))
             self.mask = pg.mask.from_surface(self.image)
         else:
             self.image = pg.transform.flip(self.image, True, False)
             self.image = self.image.convert_alpha()
             self.image.set_colorkey((255, 255, 255))
-            self.rect = self.image.get_rect(topleft = (x, y))
+            self.rect = self.image.get_rect(topleft=(x, y))
             self.mask = pg.mask.from_surface(self.image)
 
     def draw(self, window):
@@ -249,7 +261,8 @@ class Arrow(pg.sprite.Sprite):
                     if obj.health <= 0:
                         objs.remove(obj)
                 arrows.remove(self)
-    
+
+
 class Player(pg.sprite.Sprite):
     gravity = 1
     fall_count=0
@@ -257,31 +270,32 @@ class Player(pg.sprite.Sprite):
     Shield = False
     Shield_cooldown_timer = 0
     Shield_working_time = 0
-    #this is our player object
+    # this is our player object
+
     def attack1(self):
-        #this is the attack function. if player presses space he fires an arrow
-        #in the direction that he is facing
+        # this is the attack function. if player presses space he fires an arrow
+        # in the direction that he is facing
         if STAMINABAR.Rect.width >= 250:
             arrow = Arrow(self.rect.x, self.rect.y+5, self.direction)
             STAMINABAR.Rect.width -= 250
             arrows.append(arrow)
     
     def shield(self):
-        #this is the shield function. if player presses shift he will activate a shield
-        #that will last for 5 seconds and costs 450 stamina. it has a cooldown of 45 seconds
-        #that begins after the shield disappears
+        # this is the shield function. if player presses shift he will activate a shield
+        # that will last for 5 seconds and costs 450 stamina. it has a cooldown of 45 seconds
+        # that begins after the shield disappears
         if self.Shield_cooldown_timer == 0 and self.Shield_working_time == 0 and STAMINABAR.Rect.width >= 450:
             STAMINABAR.Rect.width -= 450
             self.Shield = True
             self.Shield_working_time = 5*FPS
             self.Shield_cooldown_timer = 45*FPS
-            self.path = os.path.join("assets","shielded_protag.png")
+            self.path = os.path.join("assets", "shielded_protag.png")
             self.image = pg.image.load(self.path)
             self.image = self.image.convert_alpha()
             if self.direction == "left":
                 self.image = pg.transform.flip(self.image, True, False)
             self.image = pg.transform.scale(self.image, (35, 35))
-            self.rect = self.image.get_rect(topleft = (self.rect.x, self.rect.y))
+            self.rect = self.image.get_rect(topleft=(self.rect.x, self.rect.y))
             self.mask = pg.mask.from_surface(self.image)
 
     def __init__(self, x, y):
@@ -289,11 +303,11 @@ class Player(pg.sprite.Sprite):
         self.x_vel = 0
         self.y_vel = 0
         self.direction = "right"
-        self.path = os.path.join("assets","protag.png")
+        self.path = os.path.join("assets", "protag.png")
         self.image = pg.image.load(self.path)
         self.image = self.image.convert_alpha()
         self.image = pg.transform.scale(self.image, (35, 35))
-        self.rect = self.image.get_rect(topleft = (x, y))
+        self.rect = self.image.get_rect(topleft=(x, y))
         self.mask = pg.mask.from_surface(self.image)
         
     def move_player(self, x, y):
@@ -301,15 +315,15 @@ class Player(pg.sprite.Sprite):
         self.rect.y += y
 
     def jump_player(self):
-        #if the player presses up arrow: he jumps
-        #costs 100 stamina
+        # if the player presses up arrow: he jumps
+        # costs 100 stamina
         if self.jump and STAMINABAR.Rect.width >= 100:
             STAMINABAR.Rect.width -= 100
             self.y_vel = -16
             self.jump = False
 
     def move_left(self):
-        #self explantory
+        # self explanatory
         if self.direction == "left":
             self.x_vel = -player_vel
         else:
@@ -318,7 +332,7 @@ class Player(pg.sprite.Sprite):
             self.x_vel = -player_vel
     
     def move_right(self):
-        #self explanatory
+        # self explanatory
         if self.direction == "right":
             self.x_vel = player_vel
         else:
@@ -330,12 +344,12 @@ class Player(pg.sprite.Sprite):
         window.blit(self.image, (self.rect.x, self.rect.y))
 
     def loop(self,fps):
-        #works with ingame time defined on FPS
-        self.y_vel += min(1, (self.fall_count))*self.gravity
+        # works with in-game time defined on FPS
+        self.y_vel += min(1, self.fall_count)*self.gravity
         self.fall_count += 1
         if self.Shield_working_time == 0:
             self.Shield = False
-            self.path = os.path.join("assets","protag.png")
+            self.path = os.path.join("assets", "protag.png")
             self.image = pg.image.load(self.path)
             self.image = self.image.convert_alpha()
             if self.direction == "left":
@@ -349,18 +363,18 @@ class Player(pg.sprite.Sprite):
             self.Shield_cooldown_timer -= 1
 
     def landed(self):
-        #the player can only jump if is on the ground
-        #this defines the condition for player to be on the ground
+        # the player can only jump if is on the ground
+        # this defines the condition for player to be on the ground
         self.y_vel = 0
         self.fall_count = 0
         self.jump = True
 
     def head_collide(self):
-        #if the player hits his head on the block above him, then he will start moving downwards
+        # if the player hits his head on the block above him, then he will start moving downwards
         self.y_vel = -self.gravity
 
 class Block(pg.sprite.Sprite):
-    #self explanatory
+    # self explanatory
     def __init__(self, x, y, name):
         super().__init__()
         self.x = x
@@ -372,29 +386,31 @@ class Block(pg.sprite.Sprite):
         self.image = pg.image.load(self.path)
         self.image = pg.transform.scale(self.image, (50, 50))
         self.image = self.image.convert_alpha()
-        self.rect = self.image.get_rect(topleft = (self.x, self.y))
+        self.rect = self.image.get_rect(topleft=(self.x, self.y))
         self.mask = pg.mask.from_surface(self.image)
 
-    def draw(self,window):
+    def draw(self, window):
         window.blit(self.image, (self.x, self.y))
 
+
 class Fireblock(Block):
-    #this is trap that fires fireballs upwards
+    # this is trap that fires fireballs upwards
     def __init__(self, x, y, name):
         super().__init__(x, y, name)
     
     def draw(self, window):
         return super().draw(window)
-    
+
+
 class Fireball(pg.sprite.Sprite):
-    #this is the fireball that moves in y-direction
+    # this is the fireball that moves in y-direction
     def __init__(self, x, y):
         super().__init__()
         self.path = os.path.join("assets", "fireball.png")
         img = pg.image.load(self.path)
         self.image = img.convert_alpha()
-        self.image = pg.transform.scale(self.image, (30,30))
-        self.rect = self.image.get_rect(topleft = (x+14, y-25))
+        self.image = pg.transform.scale(self.image, (30, 30))
+        self.rect = self.image.get_rect(topleft=(x+14, y-25))
         self.mask = pg.mask.from_surface(self.image)
 
     def draw(self, window):
@@ -403,49 +419,53 @@ class Fireball(pg.sprite.Sprite):
     def move(self):
         self.rect.y -= 1
 
+
 def text(player, window):
-    #this the function to generate text about player's shield status
-    cool_time = Font.render("cooldown: "+str(player.Shield_cooldown_timer//FPS),True, (23,15,236), (255,255,255))
-    work_time = Font.render("worktime: "+str(player.Shield_working_time//FPS), True, (45,236,15), (255,255,255))
+    # this the function to generate text about player's shield status
+    cool_time = Font.render("cooldown: "+str(player.Shield_cooldown_timer//FPS),True, (23, 15, 236), (255, 255, 255))
+    work_time = Font.render("worktime: "+str(player.Shield_working_time//FPS), True, (45, 236, 15), (255, 255, 255))
     shield = None
     if player.Shield == True:
-        shield = Font.render("shield: "+"ON", True, (197,173,34), (255,255,255))
+        shield = Font.render("shield: "+"ON", True, (197, 173, 34), (255, 255, 255))
     else:
-        shield = Font.render("shield: "+"OFF", True, (197,173,34), (255,255,255))
-    c = cool_time.get_rect(topleft = (900,10))
-    w = work_time.get_rect(topleft = (900,20))
-    s = work_time.get_rect(topleft = (900,30))
+        shield = Font.render("shield: "+"OFF", True, (197, 173, 34), (255, 255, 255))
+    c = cool_time.get_rect(topleft=(900, 10))
+    w = work_time.get_rect(topleft=(900, 20))
+    s = work_time.get_rect(topleft=(900, 30))
     window.blit(cool_time, c)
     window.blit(work_time, w)
     window.blit(shield, s)
-    
+
+
 def fire(objs):
-    #this function is for fireblock objects
+    # this function is for fireblock objects
     if mainloop%(3*FPS) == 0:
         for obj in objs:
             if type(obj) == Fireblock:
                 f = Fireball(obj.x, obj.y)
                 fireballs.append(f)
 
+
 def trap_collision(player, fireballs, objs, HEALTHBAR):
-    #if player collides with trap fireballs or enemy fireballs then he will lose health by 100 units
+    # if player collides with trap fireballs or enemy fireballs then he will lose health by 100 units
     for fireball in fireballs:
         for obj in objs:
             if pg.sprite.collide_mask(obj, fireball) and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
                 fireballs.remove(fireball)
         if pg.sprite.collide_mask(player, fireball):
-            if player.Shield == False:
+            if not player.Shield:
                 HEALTHBAR.Rect.width -= 100
             fireballs.remove(fireball)
                 
-#initially we were facing trouble with collisions and jumping so we took help from
-#a youtube video, we will give it's reference in the readme file
+# initially we were facing trouble with collisions and jumping so we took help from
+# a youtube video, we will give it's reference in the readme file
+
 
 def collidex(player, objs, vel):
-    #this defines collision in x direction
-    #every frame this will move the player in his direction by vel pixels
-    #if he is colliding with an block his movement will stop
-    #if he collides with an enemy then the game will end
+    # this defines collision in x direction
+    # every frame this will move the player in his direction by vel pixels
+    # if he is colliding with an block his movement will stop
+    # if he collides with an enemy then the game will end
     player.move_player(vel, 0)
     for obj in objs:
         if pg.sprite.collide_mask(player, obj):
@@ -458,11 +478,12 @@ def collidex(player, objs, vel):
     player.move_player(-vel, 0)
     return False
 
+
 def collidey(player, objs):
-    #this defines collision in y direction
-    #again if the player collides with the enemy: he dies
-    #if while moving vertically in a some direction the player collides with a block then he is 
-    #translated accordingly
+    # this defines collision in y direction
+    # again if the player collides with the enemy: he dies
+    # if while moving vertically in a some direction the player collides with a block then he is
+    # translated accordingly
     for obj in objs:
         if pg.sprite.collide_mask(player, obj):
             if type(obj) == Enemy:
@@ -474,10 +495,11 @@ def collidey(player, objs):
                 if player.y_vel < 0:
                     player.rect.top = obj.rect.bottom
                     player.head_collide()
-        
+
+
 def keybinds(player, objs):
-    #these are key presses corresponding to movement
-    #left arrow corresponds to left movement... the rest is obvious
+    # these are key presses corresponding to movement
+    # left arrow corresponds to left movement... the rest is obvious
     keys = pg.key.get_pressed()
     collide_right = collidex(player, objs, player_vel)
     collide_left = collidex(player, objs, -player_vel)
@@ -488,10 +510,11 @@ def keybinds(player, objs):
     if keys[pg.K_RIGHT] and not collide_right:
         player.move_right()
     player.move_player(player.x_vel, player.y_vel)
-    collidey(player,objs)
-    
+    collidey(player, objs)
+
+
 def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
-    #this function draws images onto the screen
+    # this function draws images onto the screen
     window.fill(BG_COLOR)
     for obj in layers:
         obj.draw(window)
@@ -506,8 +529,9 @@ def draw(window, player, layers, fireballs, HEALTHBAR, STAMINABAR):
 
     pg.display.update()
 
+
 def obj_mapper(level):
-    #this function creates a matrix of objects from a matrix of integers
+    # this function creates a matrix of objects from a matrix of integers
     new_lvl = []
     block_dimension = 50
     for row in range(14):
@@ -532,8 +556,9 @@ def obj_mapper(level):
         new_lvl.append(new_row)
     return new_lvl
 
+
 def get_layers(level):
-    #this function converts 2D object matrix to 1 dimensional list
+    # this function converts 2D object matrix to 1 dimensional list
     block_dimension = 50
     layers = []
     for row in level:
@@ -541,9 +566,10 @@ def get_layers(level):
             layers.append(obj)
     return layers
 
+
 def enemy_methods(objs, player, level):
-    #this combines all the methods used by enemy class into one function and applies 
-    #it to all enemy objects
+    # this combines all the methods used by enemy class into one function and applies
+    # it to all enemy objects
     for obj in objs:
         if type(obj) == Enemy:
             obj.vision_ai(level, player)
@@ -555,17 +581,19 @@ def enemy_methods(objs, player, level):
             obj.move_enemy(obj.x_vel)
 
 LAUNCH = False
+
+
 class MAIN_MENU:
-    #this is the main menu class made in tkinter
-    #it has two buttons: start & quit
+    # this is the main menu class made in tkinter
+    # it has two buttons: start & quit
     def __init__(self):
         self.main_menu = tk.Tk()
         self.main_menu.title("Platformer")
-        self.start = tk.Button(self.main_menu, text = "start", width = 30, command = self.launch)
-        self.exit = tk.Button(self.main_menu, text = "quit", width = 30, command = self.main_menu.destroy)
+        self.start = tk.Button(self.main_menu, text="start", width=30, command=self.launch)
+        self.exit = tk.Button(self.main_menu, text="quit", width=30, command=self.main_menu.destroy)
 
-        self.start.grid(row = 1, column = 2)
-        self.exit.grid(row = 2, column = 2)
+        self.start.grid(row=1, column=2)
+        self.exit.grid(row=2, column=2)
 
         tk.mainloop()
 
@@ -575,33 +603,35 @@ class MAIN_MENU:
         self.main_menu.destroy()
         LAUNCH = True
 
+
 def victory():
-    #if the player wins the game then a window will pop up saying  "!! YOU WIN :) !!"
-    victory = tk.Tk()
-    victory.title("VICTORY !!")
+    # if the player wins the game then a window will pop up saying  "!! YOU WIN :) !!"
+    triumph = tk.Tk()
+    triumph.title("VICTORY !!")
 
-    victory_text = tk.Label(victory, text = "!! YOU WIN :) !!").pack()
+    victory_text = tk.Label(triumph, text="!! YOU WIN :) !!").pack()
     tk.mainloop()
-        
-def loss():
-    #if the player loses the game then a window will pop up saying "!! YOU LOSE :( !!"
-    loss = tk.Tk()
-    loss.title("LOSS !!")
 
-    loss_text = tk.Label(loss, text = "!! YOU LOSE :( !!").pack()
+
+def loss():
+    # if the player loses the game then a window will pop up saying "!! YOU LOSE :( !!"
+    defeat = tk.Tk()
+    defeat.title("DEFEAT !!")
+
+    loss_text = tk.Label(defeat, text="!! YOU LOSE :( !!").pack()
     tk.mainloop()
 
 # row length = 1000/50 = 20
 # column length = 700/50 = 14
 
 
-#grass = 1
-#soil = 2
-#fireblock = 3
-#enemy_left = 4
-#enemy_right = 5
-#entrance_door = 6
-#exit_door = 7
+# grass = 1
+# soil = 2
+# fireblock = 3
+# enemy_left = 4
+# enemy_right = 5
+# entrance_door = 6
+# exit_door = 7
 
 # the below are level matrices and above are instructions
 level1 = [
@@ -661,7 +691,7 @@ level3 = [
 
 ]
 
-level4 = [ # BY DHRUVADEEP
+level4 = [# BY DHRUVADEEP
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -703,9 +733,10 @@ levels = [level1, level2, level3, level4, level5]
 
 menu = MAIN_MENU()
 
+
 def main():
 
-    #this is the main function
+    # this is the main function
     global mainloop
     global fireballs
     global HEALTHBAR
@@ -757,7 +788,6 @@ def main():
         trap_collision(player, fireballs, layers, HEALTHBAR)
         enemy_methods(layers, player, level_map)
         if exit_door.exit(player):
-        ####
             try:
                 level = levels[level_iterator]
             except IndexError:
@@ -774,7 +804,6 @@ def main():
                     entrance_door = obj
                 elif type(obj) == ExitDoor:
                     exit_door = obj
-        ####
         mainloop += 1
         if STAMINABAR.Rect.width < 499:
             STAMINABAR.Rect.width += 1
@@ -784,6 +813,7 @@ def main():
             break
 
     pg.quit()
+
 
 if LAUNCH:
     main()
