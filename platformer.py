@@ -2,7 +2,6 @@ import pygame as pg
 import os
 import tkinter as tk
 
-from pygame.sprite import AbstractGroup
 pg.init()
 
 player_vel = 3
