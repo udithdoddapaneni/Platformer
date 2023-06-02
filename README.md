@@ -12,35 +12,12 @@ b.	Motivation: In the beginning of the second semester we had a Game-Dev session
 
     a.	Project goals and scope: Our initial goal was to just make a simple game that had simple features like moving left and       right, jumping, gravity and collisions and a few other features if time left. But as these things got finished quickly, we       started adding more and more features like enemies and our ambition grew. We are planning to continue this project even after     evaluation.
 
-    b.	Project timeline: We started the project a month ago, almost immediately after the project groups were announced.  A         total of 29 commits were made (effectively 27).
 
-        On 7th May we made our first 2 commits which relied mostly on functional programming method. But we faced a lot of               problems in the jumping and collisions part and debugging became hard as code became messy with too many constants and           variables. So we switched to object oriented method which made things a lot easier.
 
-        On 10th May we made 5 commits that used OOP methods. On that day we added collisions, gravity, jumping with that we have         reached our initial goals. So we wanted to add more features.
-
-        On 12th May we made 3 commits. In them we added traps that shoot fireballs upwards. And most important feature that we           added is a function that designs levels. We have divided the level into 20x14 units and one block occupies one unit. If           we give a 20x14 matrix (nested list) with integer elements as argument objects it will add objects at those locations on         the screen (the screen’s dimension is 1000x700).
-
-        On 13th May we started coding the enemy. The objective was to make enemy move in a row (it doesn’t fall as it can float           in air). If it contacts a block it reverses its direction(Move_AI method). If the player is in its of sight, it will             shoot a fireball at the player (Vision_AI method). If the player touches it, the game ends. But we were facing some               issues in the AI part. On the same day we added Health bar and Stamina bar. The player consumes Stamina for jumping. 
-        (5 commits).
-
-        On 14th May we fixed the issues with the enemy AI. We did that by using a different algorithm and completely overhauling         the level design function. (1 commit).
-
-        On 20th May we added two new abilities for the player : Arrow and shield. Both consume stamina and the latter has cool-           down also. We also added visual indicator in the form of text about working time of shield, cool-down time left and               whether is ON or OFF. (3 commits).
-
-        Between 25th May to 26th May we added level management system. The game now has multiple levels and the player now spawns         at a yellow door and he has to reach green door to finish the level. Upon finishing all the levels the game ends. We also         added a main menu and win-loss messages using Tkinter. We preferred tkinter as it is best suited for tasks like adding           buttons and things like that. (3 commits)
-
-        On 27th May we made 2 commits updating the sprites and adding visual effects for the player when the shield is ON and             OFF. 
-
-        On 30th May we added some more levels. One of it is made by my friend Dhruvadeep (not from the team). We have highlighted         his name in the level matrix in the code as a comment. On that day we faced some glitches on Github when our teammate             Bhadra modified the readme file and sent a pull-request. Even though that request was approved the note didn’t get               modified. (4 commits, but effectively 2).
-
-        On 31st May we added comments explaining every object and function. (1 commit).
-
-        On 1st June we modified the code according to PEP-8 style
-
-c.	Team Members and Contributions:
-    i.	Doddapaneni Udith: Logic, code and introduction part of project report
-    ii.	Vaibhav. M: Project report and main-menu
-    iii.	Ramavath Bhadra: Assets
+    b.	Team Members and Contributions:
+        i.	Doddapaneni Udith: Logic, code and introduction part of project report
+        ii.	Vaibhav. M: Project report and main-menu
+        iii.	Ramavath Bhadra: Assets
 
 3.	Methodology
   a.	Approach and methodology employed: Object Oriented Programming
@@ -65,8 +42,14 @@ c.	Team Members' GitHub Accounts:
     i.	Doddapaneni Udith: https://github.com/udithdoddapaneni
     ii.	Vaibhav. M: https://github.com/vaibhzGH
     iii.	Ramavath Bhadra: https://github.com/Bhadraqueen2
+    
+6. Story: Year 2550, the protagonist named protag is a famous time traveller. One day he came in between a conflict between nations fighting in the time travel void and his soul got thrown into another verse into a body of robot. Now he has to traverse the nightmare verse filled with flying grass planes, traps shooting fireballs and floating magma beings that shoot fireballs, through doors to escape out. He has only got a crossbow.
 
-6.	References:
+7. Requirements:
+    a. Python 3(3.6 or higher recommended as pip comes along with it): https://www.python.org/downloads/
+    b. Pygame: pip install pygame
+
+8.	References:
 
 Tutorial followed to learn about pygame: https://www.youtube.com/watch?v=jO6qQDNa2UY&t=2s
 
