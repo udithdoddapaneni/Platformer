@@ -45,11 +45,30 @@ c.	Team Members' GitHub Accounts:
     
 6. Story: Year 2550, the protagonist named protag is a famous time traveller. One day he came in between a conflict between nations fighting in the time travel void and his soul got thrown into another verse into a body of robot. Now he has to traverse the nightmare verse filled with flying grass planes, traps shooting fireballs and floating magma beings that shoot fireballs, through doors to escape out. He has only got a crossbow.
 
-7. Requirements:
+7. Controls and instructions:
+    left arrow key for moving left
+    right arrow key for moving right
+    up arrow key for jumping
+    space for shooting an arrow
+    shift for activating shield
+    
+    player has 500 stamina and 500 health
+    
+    attack costs 250 stamina
+    jump costs 100 stamina
+    shield costs 450 stamina
+    stamina regenerates overtime
+    
+    one fireball takes 100 health way
+    getting in contact with the enemy will kill the player
+    shield protects against fireball but not against enemy's contact
+    health doesn't regenerate
+    
+8. Requirements:
     a. Python 3(3.6 or higher recommended as pip comes along with it): https://www.python.org/downloads/
     b. Pygame: pip install pygame
 
-8.	References:
+9.	References:
 
 Tutorial followed to learn about pygame: https://www.youtube.com/watch?v=jO6qQDNa2UY&t=2s
 
