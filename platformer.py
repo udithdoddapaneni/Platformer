@@ -799,6 +799,8 @@ def main():
     global level1
     global level_iterator
     global menu
+    global arrows
+    global fireballs
 
     window = pg.display.set_mode((WIDTH, HEIGHT))
     try:
@@ -849,6 +851,8 @@ def main():
         enemy_methods(layers, player, level_map)
         if exit_door.exit(player):
             try:
+                arrows = []
+                fireballs = []
                 level = levels[level_iterator]
             except IndexError:
                 victory()
