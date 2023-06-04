@@ -168,7 +168,7 @@ class Enemy(pg.sprite.Sprite):
                                 break
                         if firing:
                             self.enemy_fire()
-                            self.attack_clock = 2*FPS
+                            self.attack_clock = 0.75*FPS
                             break
 
         elif self.direction == "left" and self.attack_clock == 0:
@@ -182,7 +182,7 @@ class Enemy(pg.sprite.Sprite):
                                 break
                         if firing:
                             self.enemy_fire()
-                            self.attack_clock = 2*FPS
+                            self.attack_clock = 0.75*FPS
                             break
  
         else:
@@ -259,6 +259,10 @@ class Arrow(pg.sprite.Sprite):
                     obj.health -= 40
                     if obj.health <= 0:
                         objs.remove(obj)
+                arrows.remove(self)
+        for fireball in fireballs:
+            if pg.sprite.collide_mask(self, fireball):
+                fireballs.remove(fireball)
                 arrows.remove(self)
 
 
@@ -438,7 +442,7 @@ def text(player, window):
 
 def fire(objs):
     # this function is for fireblock objects
-    if mainloop%(3*FPS) == 0:
+    if mainloop%(1.5*FPS) == 0:
         for obj in objs:
             if type(obj) == Fireblock:
                 f = Fireball(obj.x, obj.y)
@@ -587,13 +591,13 @@ class MAIN_MENU:
     # it has two buttons: start & quit
     def __init__(self):
         self.main_menu = tk.Tk()
+        self.main_menu.geometry("400x400")
+        self.main_menu.configure(bg = "light blue")
         self.main_menu.title("Platformer")
-        self.start = tk.Button(self.main_menu, text="start", width=30, command=self.launch)
-        self.exit = tk.Button(self.main_menu, text="quit", width=30, command=self.main_menu.destroy)
-
-        self.start.grid(row=1, column=2)
-        self.exit.grid(row=2, column=2)
-
+        self.start = tk.Button(self.main_menu, text="START", cursor="hand1",width=35, height=3, command=self.launch, foreground="green", background="navajo white")
+        self.exit = tk.Button(self.main_menu, text="QUIT", cursor="pirate", width=35, height=3, command=self.main_menu.destroy, foreground="red", background="navajo white")
+        self.start.place(x=45, y=100)
+        self.exit.place(x=45, y=200)
         tk.mainloop()
 
     def launch(self):
@@ -606,9 +610,11 @@ class MAIN_MENU:
 def victory():
     # if the player wins the game then a window will pop up saying  "!! YOU WIN :) !!"
     triumph = tk.Tk()
+    triumph.geometry("300x300")
     triumph.title("VICTORY !!")
 
-    victory_text = tk.Label(triumph, text="!! YOU WIN :) !!").pack()
+    victory_text = tk.Label(triumph, text="!! YOU WIN :) !!", foreground="green")
+    victory_text.place(x=85, y=25)
     tk.mainloop()
 
 
@@ -616,8 +622,10 @@ def loss():
     # if the player loses the game then a window will pop up saying "!! YOU LOSE :( !!"
     defeat = tk.Tk()
     defeat.title("DEFEAT !!")
+    defeat.geometry("300x300")
 
-    loss_text = tk.Label(defeat, text="!! YOU LOSE :( !!").pack()
+    loss_text = tk.Label(defeat, text="!! YOU LOSE :( !!", foreground="red")
+    loss_text.place(x=85, y=25)
     tk.mainloop()
 
 # row length = 1000/50 = 20
@@ -802,6 +810,7 @@ def main():
         elif type(obj) == ExitDoor:
             exit_door = obj
     while run:
+        pg.display.set_caption(f"LVL {level_iterator+1}")
         clock.tick(FPS)
         for event in pg.event.get():
             if event.type == pg.QUIT:
