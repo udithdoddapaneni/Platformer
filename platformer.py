@@ -108,6 +108,16 @@ class Enemy_Fireball(pg.sprite.Sprite):
         elif self.direction == "left":
             self.rect.x -= 4
 
+    def collision(self, objs, player):
+        for obj in objs:
+            if pg.sprite.collide_mask(self, obj) and type(obj) != EntranceDoor and type(obj) != ExitDoor and type(obj) != Enemy:
+                fireballs.remove(self)
+                break
+            elif pg.sprite.collide_mask(self, player):
+                if not player.Shield:
+                    HEALTHBAR.Rect.width -= 100
+                fireballs.remove(self)
+                break
 
 class Enemy(pg.sprite.Sprite):
     # this is the class of the enemy unit
@@ -422,6 +432,17 @@ class Fireball(pg.sprite.Sprite):
     def move(self):
         self.rect.y -= 1
 
+    def collision(self, objs, player):
+        for obj in objs:
+            if pg.sprite.collide_mask(self, obj) and type(obj) != EntranceDoor and type(obj) != ExitDoor and type(obj) != Enemy:
+                fireballs.remove(self)
+                break
+            elif pg.sprite.collide_mask(self, player):
+                if not player.Shield:
+                    HEALTHBAR.Rect.width -= 100
+                fireballs.remove(self)
+                break
+
 
 def text(player, window):
     # this the function to generate text about player's shield status
@@ -448,17 +469,6 @@ def fire(objs):
                 f = Fireball(obj.x, obj.y)
                 fireballs.append(f)
 
-
-def trap_collision(player, fireballs, objs, HEALTHBAR):
-    # if player collides with trap fireballs or enemy fireballs then he will lose health by 100 units
-    for fireball in fireballs:
-        for obj in objs:
-            if pg.sprite.collide_mask(obj, fireball) and type(obj) != Enemy and type(obj) != EntranceDoor and type(obj) != ExitDoor:
-                fireballs.remove(fireball)
-        if pg.sprite.collide_mask(player, fireball):
-            if not player.Shield:
-                HEALTHBAR.Rect.width -= 100
-            fireballs.remove(fireball)
                 
 # initially we were facing trouble with collisions and jumping so we took help from
 # a youtube video, we will give it's reference in the readme file
@@ -832,10 +842,10 @@ def main():
         fire(layers)
         for f in fireballs:
             f.move()
+            f.collision(layers, player)
         for arrow in arrows:
             arrow.move()
             arrow.collision(layers)
-        trap_collision(player, fireballs, layers, HEALTHBAR)
         enemy_methods(layers, player, level_map)
         if exit_door.exit(player):
             try:
