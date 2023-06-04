@@ -55,13 +55,19 @@ c.	Team Members' GitHub Accounts:
     player has 500 stamina and 500 health
     
     attack costs 250 stamina
+    
     jump costs 100 stamina
+    
     shield costs 450 stamina
+    
     stamina regenerates overtime
     
     one fireball takes 100 health way
+    
     getting in contact with the enemy will kill the player
+    
     shield protects against fireball but not against enemy's contact
+    
     health doesn't regenerate
     
 8. Requirements:
