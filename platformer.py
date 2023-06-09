@@ -822,10 +822,7 @@ def main():
         elif type(obj) == ExitDoor:
             exit_door = obj
     while run:
-        if level_iterator == 5:
-            pg.display.set_caption("LVL 6 by Dhruv")
-        else:
-            pg.display.set_caption(f"LVL {level_iterator+1}")
+        pg.display.set_caption(f"LVL {level_iterator+1}")
         clock.tick(FPS)
         for event in pg.event.get():
             if event.type == pg.QUIT:
