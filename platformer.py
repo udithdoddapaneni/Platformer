@@ -651,7 +651,7 @@ def loss():
 # exit_door = 7
 
 # the below are level matrices and above are instructions
-level1 = [ # Bhadra
+level1 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -670,7 +670,7 @@ level1 = [ # Bhadra
 
 ]
 
-level2 = [ # Bhadra
+level2 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -689,7 +689,7 @@ level2 = [ # Bhadra
 
 ]
 
-level3 = [ # Vaibhav
+level3 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -708,7 +708,7 @@ level3 = [ # Vaibhav
 
 ]
 
-level4 = [ # Vaibhav
+level4 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -727,7 +727,7 @@ level4 = [ # Vaibhav
 
 ]
 
-level5 = [ # Vaibhav
+level5 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -746,7 +746,26 @@ level5 = [ # Vaibhav
 
 ]
 
-level6 = [ # Udith
+level6 = [# BY DHRUVADEEP
+    
+    [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,2],
+    [2,0,0,4,0,0,0,0,0,4,0,0,0,0,0,0,1,1,1,2],
+    [2,0,1,1,1,0,0,0,1,1,1,1,3,1,1,1,1,1,0,2],
+    [2,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,2],
+    [2,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,2],
+    [2,6,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,2],
+    [2,1,1,1,1,1,2,1,1,2,2,1,1,1,1,1,1,1,1,2],
+
+]
+
+level7 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2],
@@ -765,7 +784,7 @@ level6 = [ # Udith
 
 ]
 
-level7 = [ # Udith
+level8 = [
     
     [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2],
     [2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,2],
@@ -784,7 +803,7 @@ level7 = [ # Udith
 
 ]
 
-levels = [level1, level2, level3, level4, level5, level6, level7]
+levels = [level1, level2, level3, level4, level5, level6, level7, level8]
 
 menu = MAIN_MENU()
 
@@ -799,8 +818,6 @@ def main():
     global level1
     global level_iterator
     global menu
-    global arrows
-    global fireballs
 
     window = pg.display.set_mode((WIDTH, HEIGHT))
     try:
@@ -822,13 +839,10 @@ def main():
         elif type(obj) == ExitDoor:
             exit_door = obj
     while run:
-        pg.display.set_caption(f"LVL {level_iterator+1}")
-        if level_iterator+1 <= 2:
-            pg.display.set_caption(f"LVL {level_iterator+1} by Bhadra")
-        elif level_iterator+1 >= 6:
-            pg.display.set_caption(f"LVL {level_iterator+1} by Udith")
+        if level_iterator == 5:
+            pg.display.set_caption("LVL 6 by Dhruv")
         else:
-            pg.display.set_caption(f"LVL {level_iterator+1} by Vaibhav")
+            pg.display.set_caption(f"LVL {level_iterator+1}")
         clock.tick(FPS)
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -854,8 +868,6 @@ def main():
         enemy_methods(layers, player, level_map)
         if exit_door.exit(player):
             try:
-                arrows = []
-                fireballs = []
                 level = levels[level_iterator]
             except IndexError:
                 victory()
